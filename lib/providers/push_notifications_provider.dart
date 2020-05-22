@@ -1,8 +1,15 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 
 class PushNotificationProvider {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  // Mapa
+  final _mensajesStreamControlle = StreamController<String>.broadcast();
+
+  Stream<String> get mensajes => _mensajesStreamControlle.stream;
 
   iniNotifications() {
     // Solicitar permiso de motrar notificaciones
@@ -17,8 +24,13 @@ class PushNotificationProvider {
       // Cuando esta en ejecucion la app
       onMessage: (Map<String, dynamic> message) async {
         print("============ onMessage: $message");
-
-
+        String argumento = 'no-data';
+        if (Platform.isAndroid) {
+          argumento = message['data']['Comida'] ?? 'no-data';
+        } else {
+          argumento = message['Comida'] ?? 'no-data-ios';
+        }
+         _mensajesStreamControlle.sink.add(argumento);
         
       },
       // onBackgroundMessage: myBackgroundMessageHandler,
@@ -30,14 +42,23 @@ class PushNotificationProvider {
       // CLICK
       onResume: (Map<String, dynamic> message) async {
         print("============ onResume: $message");
+        String argumento = 'no-data';
+        if (Platform.isAndroid) {
+          argumento = message['data']['Comida'] ?? 'no-data';
+        } else {
+          argumento = message['Comida'] ?? 'no-data-ios';
+        }
+         _mensajesStreamControlle.sink.add(argumento);
+     
 
-        final noti = message['data']['Comida'];
-        print(noti);
+       //  print(noti);
       },
     );
   }
 
-  
+  dispose() {
+    _mensajesStreamControlle?.close();
+  }
 
 }
 
